@@ -21,7 +21,7 @@ provider "aws" {
 
 resource "aws_cur_report_definition" "this" {
   provider                   = aws.us-east-1
-  report_name                = "cur-report-definition"
+  report_name                = "${var.source_account_id}-cur-definition"
   time_unit                  = "HOURLY"
   format                     = "Parquet"
   compression                = "Parquet"
@@ -38,7 +38,7 @@ resource "aws_cur_report_definition" "this" {
 */
 
 resource "aws_s3_bucket" "cost_reporter" {
-  bucket = var.local_s3_bucket
+  bucket = "${var.source_account_id}-source-cur"
 }
 
 resource "aws_s3_bucket_versioning" "cost_reporter_versioning" {
@@ -105,7 +105,7 @@ data "aws_iam_policy_document" "replication" {
       "s3:ObjectOwnerOverrideToBucketOwner"
     ]
 
-    resources = ["${var.central_s3_bucket_arn}/*"]
+    resources = ["arn:aws:s3:::${var.central_account_id}-central-cost-and-usage-reports/*"]
   }
 }
 
@@ -132,7 +132,7 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
 
     destination {
       account       = var.central_account_id
-      bucket        = var.central_s3_bucket_arn
+      bucket        = "arn:aws:s3:::${var.central_account_id}-central-cost-and-usage-reports"
       storage_class = "STANDARD"
       access_control_translation {
         owner = "Destination"
